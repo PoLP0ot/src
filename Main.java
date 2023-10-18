@@ -1,24 +1,18 @@
-import java.sql.SQLOutput;
-import java.util.Random;
-import javax.swing.*;
+import javax.swing.JFrame;
 
 
 /**
- * 2022
- * Beginning of demineur
- * @version 8.0
- * @author Cyprien
- * @see <a href="http://www.laurent-freund.fr/cours">laurent-freund.fr/cours</a>
+ * Main class
  */
 public class Main extends JFrame{
-    private Field field;
+    private Matrix Matrix;
     private GUI gui;
     private boolean isMultiplayer = false;
 
     Main(Levels levels){
-        field = new Field(levels);
-        field.nouvellePartie(levels);
-        //Field f2 = new Field(Levels.MEDIUM);
+        Matrix = new Matrix(levels);
+        Matrix.nouvellePartie(levels);
+        
         setTitle("XMines");
         gui = new GUI(this);
         setContentPane(gui);
@@ -28,23 +22,26 @@ public class Main extends JFrame{
 
 
     }
-    Field getChamp(){
-        return(field);
+    Matrix getChamp(){
+        return(Matrix);
     }
 
     public void nouvellePartie(Levels levels){
-        field.nouvellePartie(levels);
-        field.setLevel(levels);
-        field.affText();
+        Matrix.nouvellePartie(levels);
+        Matrix.setLevel(levels);
+        Matrix.affText();
 
     }
+
     /**
      * New game with starting position
+     * évite de tomber sur une mine au premier coup
      * */
+    
     public void nouvellePartie(Levels levels, int posx, int posy){
-        field.nouvellePartie(levels,posx, posy);
-        field.setLevel(levels);
-        field.affText();
+        Matrix.nouvellePartie(levels,posx, posy);
+        Matrix.setLevel(levels);
+        Matrix.affText();
     }
 
     /**

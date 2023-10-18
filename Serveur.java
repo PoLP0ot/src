@@ -1,17 +1,14 @@
-import java.awt.*;
-import java.io.*;
+import java.awt.Color;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.sql.SQLOutput;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
-import static java.lang.System.in;
-
-
 public class Serveur implements Runnable {
-    static final int PORT = 2323;
+    static final int PORT = 10000;
     private Socket sock;
     private ServerSocket server;
 
