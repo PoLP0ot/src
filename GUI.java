@@ -11,6 +11,8 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -20,8 +22,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-
-
 /**
  * Graphical user interface
  */
@@ -74,6 +74,7 @@ public class GUI extends JPanel implements ActionListener, Runnable  {
     private boolean isReady = false;
 
     private int[] score = {0,0,0,0,0,0,0,0,0,0};
+    private List<String> playerNamesList = new ArrayList<>();
 
 
 
@@ -169,6 +170,14 @@ public class GUI extends JPanel implements ActionListener, Runnable  {
             System.out.println("j'attend mon numéro");
             numClient = ois.readInt();
             System.out.println("Je suis le client numéro : " + numClient);
+            String playerName = showPlayerNameDialog();
+
+            if (playerName != null && !playerName.trim().isEmpty()) {
+            oos.writeUTF("NOM"); // Envoyer le message "NOM"
+            oos.writeUTF(playerName.trim()); // Ensuite, envoyer le nom du joueur
+            System.out.println("Je suis le client numéro : " + playerName);
+            }
+
 
 
             int reponse = JOptionPane.showConfirmDialog(this, "En attente d'autres joueurs, voulez-vous lancer ?", "Multiplayer game", JOptionPane.OK_CANCEL_OPTION);
@@ -177,6 +186,8 @@ public class GUI extends JPanel implements ActionListener, Runnable  {
                 oos.writeUTF("READY");
                 isReady = true;
             }
+
+            oos.writeUTF("GETNAMES"); // Demander au serveur d'envoyer la liste des noms
 
             Thread monThread = new Thread(this);
             monThread.start();
@@ -230,7 +241,9 @@ if ((e.getSource() == CUSTOM)) {
 // Si mMultijoueur sélectionnée
 if (e.getSource() == mMultijoueur) {
     mMultijoueur.setEnabled(false);
-
+    
+    
+    
     // Calcule nombre lignes pour afficher scores des joueurs
     if (numClient%3 == 0)
         nbLignes = numClient/3;
@@ -238,7 +251,7 @@ if (e.getSource() == mMultijoueur) {
         nbLignes = numClient/3 + 1;
 
     System.out.println("nbLignes : " + nbLignes);
-
+   
     // Crée panel afficher scores joueurs
     scoreJoueurPanel = new JPanel(new GridLayout( nbLignes, 3));
     for (int i = 0; i < numClient; i++) {
@@ -267,7 +280,20 @@ if ((e.getSource() == Quit)) {
 }
 
     }
-
+    /**
+     * Fonction de notre serveur pour le mode multijoueur
+     */
+    private String showPlayerNameDialog() {
+        String playerName = null;
+        while (playerName == null || playerName.trim().isEmpty()) {
+            playerName = JOptionPane.showInputDialog("Veuillez entrer votre nom de joueur:");
+            if (playerName == null) {
+                // L'utilisateur a annulé la boîte de dialogue
+                return null;
+            }
+        }
+        return playerName.trim();
+    }
     public void relancerPartie(Levels levels) {
         main.nouvellePartie(levels);
         refreshGrid(levels);
@@ -433,6 +459,17 @@ public void run(){
                     nbPlayer = ois.readInt();
                     setScoreBoard(nbPlayer);
                     break;
+
+                //Nom des joueurs
+                case "NAMESLIST":
+                    int numberOfNames = ois.readInt();
+                    playerNamesList.clear(); // Effacez la liste actuelle
+                    for (int i = 0; i < numberOfNames; i++) {
+                    String playerName = ois.readUTF();
+                    playerNamesList.add(playerName); // Ajoutez chaque nom à la liste
+                    }
+                    setScoreBoard(playerNamesList.size()); // Mettez à jour la barre de score avec les nouveaux noms
+        break;
             }
         }
     }
@@ -481,13 +518,15 @@ public void setScoreBoard(int nbPlayer) {
 
         // Ajoute un label pour chaque joueur avec son score.
         for (int i = 0; i < nbPlayer; i++) {
+            String playerName = (i < playerNamesList.size()) ? playerNamesList.get(i) : ("Joueur " + (i + 1));
             if (numClient == i + 1) {
-                scoreJoueurLabel = new JLabel("(Vous) Joueur " + (i + 1) + ": " + score[i]);
+                scoreJoueurLabel = new JLabel("(Vous) " + playerName + ": " + score[i]);
                 scoreJoueurLabel.setFont(new Font("Arial", Font.BOLD, 12));  // Met en gras le score du joueur actuel.
             } else
-                scoreJoueurLabel = new JLabel("Joueur " + (i + 1) + ": " + score[i]);
+                scoreJoueurLabel = new JLabel(playerName + ": " + score[i]);
             scoreJoueurPanel.add(scoreJoueurLabel);  // Ajoute le label au panel.
         }
+
 
         add(scoreJoueurPanel, BorderLayout.SOUTH);  // Ajoute le panel au composant principal.
         revalidate();  // Met à jour l'affichage.

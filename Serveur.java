@@ -16,7 +16,7 @@ public class Serveur implements Runnable {
     private List<Socket> clients = new ArrayList<Socket>();
     private List<DataOutputStream> oos = new ArrayList<DataOutputStream>();
     private List<DataInputStream> ois = new ArrayList<DataInputStream>();
-
+    private List<String> playerNames = new ArrayList<String>();
     private List<Boolean> isReady = new ArrayList<Boolean>();
     private boolean allReady = false;
 
@@ -62,6 +62,7 @@ public class Serveur implements Runnable {
             System.out.println("Nombre de clients connectés : " + clients.size());
             Thread monThread = new Thread(this);
             monThread.start();
+            
 
             oos.add(new DataOutputStream(sock.getOutputStream()));
             ois.add(new DataInputStream(sock.getInputStream()));
@@ -93,7 +94,9 @@ public class Serveur implements Runnable {
 
 
                     System.out.println("j'attends un message");
-                    switch (ois.get(numClient - 1).readUTF()) {
+                    String receivedMessage = ois.get(numClient - 1).readUTF(); // Lire le message une seule fois
+                    System.out.println("Message reçu: " + receivedMessage);
+                    switch (receivedMessage) {
                         case "READY":
                             System.out.println("j'ai reçu un message");
                             isReady.set(numClient - 1, true);
@@ -102,6 +105,18 @@ public class Serveur implements Runnable {
 
                         case "NOM":
                             System.out.println("j'ai recu un nom");
+                            String playerName = ois.get(numClient - 1).readUTF();
+                            System.out.println("Nom du joueur: " + playerName);
+                            
+                            playerNames.add(playerName); 
+                            break;
+
+                            case "GETNAMES":
+                            oos.get(numClient - 1).writeUTF("NAMESLIST");
+                            oos.get(numClient - 1).writeInt(playerNames.size());
+                            for (String name : playerNames) {
+                                oos.get(numClient - 1).writeUTF(name);
+                            }
                             break;
 
                         case "POS":
